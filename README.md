@@ -1,2 +1,5 @@
 # MLProjects
-Smaller or Bigger projects in the field of Machine learning
+
+This is where I update code while learning different concepts of machine learning.
+
+
