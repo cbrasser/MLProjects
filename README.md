@@ -1,5 +1,5 @@
 # MLProjects
 
-This is where I update code while learning different concepts of machine learning.
+- Some code / files created in the process of getting into machine learning. 
 
 
