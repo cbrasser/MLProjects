@@ -15,6 +15,7 @@ df = df[['Adj. Open','Adj. High','Adj. Low','Adj. Close','Adj. Volume']]
 df['HL_PCT'] = (df['Adj. High'] - df['Adj. Close']) / df['Adj. Close'] * 100
 df['PCT_change'] = (df['Adj. Close'] - df['Adj. Open']) / df['Adj. Open'] * 100
 
+#            price       x            x         x
 df = df[['Adj. Close','HL_PCT','PCT_change','Adj. Volume']]
 
 
@@ -25,7 +26,7 @@ df.fillna(-99999, inplace = True)
 
 #Builds an integer that defines the amount of days we want to forecast
 #Example: wa have 300 datapoints, forecast_out will be 0.01 * 300 = 3 day
-forecast_out = int(math.ceil(0.01*len(df)))
+forecast_out = int(math.ceil(0.1*len(df)))
 print(forecast_out)
 
 #The label values are the Adj. Close value from the datapoints forecast_out days in the future
@@ -37,6 +38,7 @@ df['label'] = df[forecast_col].shift(-forecast_out)
 #Array of all values except label column
 X = np.array(df.drop(['label'],1))
 X = preprocessing.scale(X)
+#X equals to X until forecast_out
 X_lately = X[-forecast_out:]
 X = X[:-forecast_out]
 
