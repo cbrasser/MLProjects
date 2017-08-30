@@ -6,6 +6,9 @@ import random
 
 style.use('fivethirtyeight')
 
+#take a dataset with a linear dependency and search for the best fit slope and intercept (y=mx+b) with the standard linalg formula
+#via means of x and y values. Now the model has a linear function which can create a prediction (y) for every input (X)
+#Calculate the error via coefficient_of_determination
 
 # xs = np.array([1,2,3,4,5,6], dtype = np.float64)
 # ys = np.array([5,4,6,5,6,7], dtype= np.float64)

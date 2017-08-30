@@ -9,7 +9,7 @@ import pickle
 
 style.use('ggplot')
 
-df = pd.read_csv('airfoil_self_noise.dat.txt',sep='\t')
+df = pd.read_csv('airfoil_self_noise.dat.txt')
 
 print(df.head())
 
@@ -22,12 +22,20 @@ clf = LinearRegression()
 
 clf.fit(X_train, y_train)
 
-with open('linearRegression.pickle','wb') as f:
+with open('linearRegressionAirfoil.pickle','wb') as f:
     pickle.dump(clf, f)
 
-pickle_in = open('linearRegression.pickle','rb')
+pickle_in = open('linearRegressionAirfoil.pickle','rb')
 clf = pickle.load(pickle_in)
 
 accuracy = clf.score(X_test,y_test)
+
+example_measure = np.array([6300,180,0.3048,55.5,0.00283081])
+
+#first attribute is amount of measures in the list of samples, shapes data for sklearn
+#example_measure = example_measure.reshape(1,-1)
+
+prediction = clf.predict(example_measure)
+print('prediction: ',prediction)
 
 print(accuracy)
