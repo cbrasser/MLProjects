@@ -34,5 +34,3 @@ for i in range(25):
     accuracies.append(accuracy)
 
 print(sum(accuracies)/len(accuracies))
-
-print('GIT TEST')
