@@ -11,24 +11,10 @@ import copter
 LR = 1e-3
 #copter.setUp()
 goal_steps = 500
-score_requirement = 50
+score_requirement = 100
 initial_games = 100
-action = 0
 
-def some_random_games_first():
-    for episode in range(500):
-        copter.reset()
-        for t in range(goal_steps):
-            global action
-            #Can be left out to speed up, only visuals
-            #copter.render()
-            action = copter.random_action(action)
-            #Data from the game (zB. Pole, car, ...), score, bool, info
-            observation, reward, done = copter.main_game_loop(action)
-            if done:
-                break
 
-#some_random_games_first()
 
 def initial_population():
     training_data = [] # initial data will be random
@@ -40,9 +26,9 @@ def initial_population():
         game_memory=[]
         prev_observation = []
         for _ in range(goal_steps):
-            global action
+
             #Only generates 0s and 1s
-            action = copter.random_action(action)
+            action = copter.random_action2()
             observation, reward, done = copter.main_game_loop(action)
 
             game_memory.append([observation,action])
@@ -55,12 +41,11 @@ def initial_population():
             for data in game_memory:
                 #Output in this form because of one-hot, could be useful when there are more input possibilities
                 #than just 0 or 1!
+                output =[0,0]
                 if data[1] == 1:
                     output = [0,1]
                 elif data[1] == 2:
                     output = [1,0]
-                else:
-                    output = [0,0]
 
                 # saving our training data
                 training_data.append([data[0], output])
@@ -79,9 +64,13 @@ def initial_population():
 
     return training_data
 
+def load_training_data():
+    training_data = []
+    np.load('saved.npy', training_data)
+    return training_data
 
-def neural_network_model(input_size):
-    network = input_data(shape=[None, input_size, 1], name = 'input')
+def neural_network_model(input_size, test=False):
+    network = input_data(shape=[None, input_size,1], name = 'input')
 
     network = fully_connected(network, 128, activation = 'relu')
     #0.8 is keep rate rather than dropout rate ??
@@ -100,6 +89,7 @@ def neural_network_model(input_size):
 
     network = fully_connected(network, 2, activation='softmax')
     network = regression(network, optimizer='adam', learning_rate=LR, loss='categorical_crossentropy', name ='targets')
+
     model = tflearn.DNN(network, tensorboard_dir ='log')
 
     return model
@@ -108,6 +98,7 @@ def train_model(training_data, model=False):
     # i contains [observations, output (action you took)]
     print(len(training_data[0][0]))
     X = np.array([i[0] for i in training_data]).reshape(-1,len(training_data[0][0]),1)
+    print('Len x: ',len(X))
     y = [i[1] for i in training_data]
 
     if not model:
@@ -133,12 +124,12 @@ for each_game in range(100):
     prev_obs = []
     copter.reset()
     for _ in range((goal_steps)):
-        global action
+
         #copter.render()
         if len(prev_obs) ==0:
-            action = copter.random_action(action)
+            action = copter.random_action2()
         else:
-            action = np.argmax(model.predict(prev_obs)[0])
+            action = np.argmax(model.predict(prev_obs.reshape(-1,len(prev_obs),1))[0])
         choices.append(action)
 
         new_observation, reward, done = copter.main_game_loop(action)

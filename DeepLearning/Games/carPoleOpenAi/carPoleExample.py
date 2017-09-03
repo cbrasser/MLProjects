@@ -121,11 +121,12 @@ def train_model(training_data, model=False):
 training_data = initial_population()
 model = train_model(training_data)
 
-'''
+
 model.save('myModel.model')
 
-model.load('myModel.model')
-'''
+#model.load('myModel.model')
+
+
 scores = []
 choices = []
 for each_game in range(100):

@@ -178,6 +178,13 @@ def random_action(state):
         else:
             return 3
 
+def random_action2():
+    ran = random.randrange(0,10)
+    if ran < 5:
+        return 0
+    else:
+        return 1
+
 def reset():
     global x
     global y
@@ -245,20 +252,25 @@ def main_game_loop(action):
     #             up = False
     #             timer = 0
     #             gravity_timer = 0
-    if action ==1:
-         timer =0
-         up = True
-    elif action == 2:
-        up = False
-        timer = 0
-        gravity_timer =0
+    # if action ==1:
+    #      timer =0
+    #      up = True
+    # elif action == 2:
+    #     up = False
+    #     timer = 0
+    #     gravity_timer =0
 
+
+    if action ==0:
+         y+=5
+    elif action == 1:
+        y-=5
 
     x += x_change
-    if up:
-        y += gravity - timer/2
-    else:
-        y += gravity +gravity_timer/5
+    # if up:
+    #     y += gravity - timer/2
+    # else:
+    #     y += gravity +gravity_timer/5
 
     gameDisplay.fill(white)
     score +=1
@@ -273,13 +285,21 @@ def main_game_loop(action):
     if x > display_width - copter_width or x < 0:
         gameExit = True
 
-    #pygame.display.update()
+    pygame.display.update()
     #clock.tick(60)
     timer += 1
     gravity_timer +=1
     # test = [[x],[y],walls[0],walls[1],[timer],[gravity_timer]]
     # test2 = np.concatenate([np.array(lis) for lis in test])
-    return [x,y,timer,gravity_timer], score, done
+    upper_Boundaries = [wall[1]+170 for wall in walls[0]]
+    lower_Boundaries = [wall[1] for wall in walls[1]]
+    return_val =[x,y]
+    for df in upper_Boundaries:
+        return_val.append(df)
+    for dg in lower_Boundaries:
+        return_val.append(dg)
+
+    return np.array(return_val), score, done
 
 class observation(object):
      def __init__(self):
