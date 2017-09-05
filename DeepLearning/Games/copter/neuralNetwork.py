@@ -11,8 +11,8 @@ import copter
 LR = 1e-3
 #copter.setUp()
 goal_steps = 500
-score_requirement = 100
-initial_games = 100
+score_requirement = 60
+initial_games = 1000
 
 
 
@@ -23,12 +23,13 @@ def initial_population():
 
     for _ in range(initial_games):
         score = 0
+
         game_memory=[]
         prev_observation = []
         for _ in range(goal_steps):
 
             #Only generates 0s and 1s
-            action = copter.random_action2()
+            action = random.randrange(0,2)
             observation, reward, done = copter.main_game_loop(action)
 
             game_memory.append([observation,action])
@@ -43,8 +44,10 @@ def initial_population():
                 #than just 0 or 1!
                 output =[0,0]
                 if data[1] == 1:
+
                     output = [0,1]
-                elif data[1] == 2:
+                elif data[1] == 0:
+
                     output = [1,0]
 
                 # saving our training data
@@ -57,35 +60,37 @@ def initial_population():
 
     print('Average accepted score: ',mean(accepted_scores))
     print('Median accepted score: ', median(accepted_scores))
-    print(Counter(accepted_scores))
+
+    print(len(accepted_scores))
 
     print('TRAINGING DATA',training_data[0])
     print('TRAINGING DATA',training_data[0][0])
 
+    for asdf in range(0,100):
+        print('TRAINING DATA', training_data[asdf])
+
     return training_data
 
 def load_training_data():
-    training_data = []
-    np.load('saved.npy', training_data)
-    return training_data
+    return np.load('saved.npy')
 
 def neural_network_model(input_size, test=False):
     network = input_data(shape=[None, input_size,1], name = 'input')
 
     network = fully_connected(network, 128, activation = 'relu')
     #0.8 is keep rate rather than dropout rate ??
-    network = dropout(network, 0.8)
+    network = dropout(network, 0.7)
 
     network = fully_connected(network, 256, activation = 'relu')
-    network = dropout(network, 0.8)
+    network = dropout(network, 0.7)
 
     network = fully_connected(network, 512, activation = 'relu')
 
     network = fully_connected(network, 256, activation = 'relu')
-    network = dropout(network, 0.8)
+    network = dropout(network, 0.7)
 
     network = fully_connected(network, 128, activation = 'relu')
-    network = dropout(network, 0.8)
+    network = dropout(network, 0.7)
 
     network = fully_connected(network, 2, activation='softmax')
     network = regression(network, optimizer='adam', learning_rate=LR, loss='categorical_crossentropy', name ='targets')
@@ -111,33 +116,33 @@ def train_model(training_data, model=False):
 training_data = initial_population()
 model = train_model(training_data)
 
-'''
-model.save('myModel.model')
 
+model.save('myModel.model')
+'''
 model.load('myModel.model')
 '''
 scores = []
 choices = []
-for each_game in range(100):
+for each_game in range(10):
     score = 0
     game_memory =[]
     prev_obs = []
     copter.reset()
-    for _ in range((goal_steps)):
+    for _ in range((1000)):
 
-        #copter.render()
+
         if len(prev_obs) ==0:
-            action = copter.random_action2()
+            action = random.randrange(0,2)
         else:
             action = np.argmax(model.predict(prev_obs.reshape(-1,len(prev_obs),1))[0])
         choices.append(action)
 
-        new_observation, reward, done = copter.main_game_loop(action)
+        new_observation, reward, done = copter.game_loop_testing(action)
         prev_obs = new_observation
         game_memory.append([new_observation, action])
         score += reward
         if done:
             break
     scores.append(score)
-
+print(choices)
 print('Average score: ',sum(scores)/len(scores))

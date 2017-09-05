@@ -20,6 +20,7 @@ clock = pygame.time.Clock()
 crashed = False
 copterImg = pygame.image.load('copter.png')
 direction = [0,0]
+index =0
 
 #----------------------Init------------------------
 pygame.init()
@@ -45,6 +46,54 @@ def create_wall():
     return upper_walls, lower_walls
 
 walls =create_wall()
+
+def update_walls_without_drawing(score, copter_x,copter_y, index):
+
+    #First number: 1 ->up, 0 -> down | Second number: #Frames we are already going in that direction
+    global direction
+
+    for wallGroup in walls:
+        moved = False
+        for counter in range(0,54):
+            if not moved:
+                moved = True
+                index1 =0
+                if index == 0:
+                    index1=54
+                else:
+                    index1 = index-1
+
+                wallGroup[index][0]=wallGroup[index1][0]
+
+                if direction[0] == 1:
+
+                    #Rate of going up dependent on how long we go in this direction
+
+                    wallGroup[index][1]=wallGroup[index1][1] - (direction[1]+1)*2
+
+                    #Deciding if we want to change direction dependent on how long we go into the prev direction
+                    #REVIEW Might need to change the range
+                    next_direction = random.randrange(0,10)
+                    if next_direction <= direction[1] or (wallGroup[index][4]==green and wallGroup[index][1]<-150):
+                        #print('CHANGING DIRECTION TO DOWN')
+                        direction = [0,0]
+                    direction[1]+= 1
+                #Going down
+                elif direction[0] == 0:
+                    #print('we are going down')
+                    #Rate of going down dependent on how long we go in this direction
+
+                    wallGroup[index][1]=wallGroup[index1][1] + (direction[1]+1)*2
+                    #Deciding if we want to change direction dependent on how long we go into the prev direction
+                    #REVIEW Might need to change the 100
+                    next_direction = random.randrange(0,10)
+                    if next_direction <= direction[1] or (wallGroup[index][4]==blue and wallGroup[index][1]>display_height-20):
+                        #print('CHANGING DIRECTION TO UP')
+                        direction = [1,0]
+                    direction[1]+= 1
+
+            if not  counter == index:
+                wallGroup[counter][0] -=wall_width
 
 def update_walls(score, copter_x,copter_y, index):
     tempscore = score -1
@@ -94,10 +143,6 @@ def update_walls(score, copter_x,copter_y, index):
             if not  counter == index:
                 wallGroup[counter][0] -=wall_width
 
-            if copter_x>=wallGroup[counter][0] and copter_x <= (wallGroup[counter][0]+wallGroup[counter][2]):
-                if copter_y >= wallGroup[counter][1] and copter_y <= (wallGroup[counter][1]+wallGroup[counter][3]):
-                    # crash()
-                    return True
             if wallGroup[counter][1]>0 and wallGroup[counter][4] == green:
                 draw(wallGroup[index][0],0,wallGroup[counter][2],wallGroup[counter][1]+30,green)
             elif wallGroup[counter][1]<display_height-170 and wallGroup[counter][4] == blue:
@@ -189,6 +234,13 @@ def reset():
     up = False
     walls =create_wall()
 
+def crashCheck(copter_x,copter_y):
+    for wallGroup in walls:
+        index = 0
+        for wall in wallGroup:
+            if copter_x>=wall[0] and copter_x <= (wall[0]+wall[2]):
+                if copter_y >= wall[1] and copter_y <= (wall[1]+wall[3]):
+                    return True
 
 
 def main_game_loop(action):
@@ -196,87 +248,47 @@ def main_game_loop(action):
     global x
     global y
     global score
-    global gravity
-    global vert_speed
-    global hor_speed
-    global timer
-    global gravity_timer
-    global up
-    global exit
     global walls
-    #No boost
-    action_chosen =0
-
-
-
-    #--------------------------------ONLY FOR HUMAN PLAYER
-    #while not exit:
-    #print(20*'_')
-    # for event in pygame.event.get():
-    #     if event.type == pygame.QUIT:
-    #         crashed = True
-    #
-    #     if event.type == pygame.KEYDOWN:
-    #         if event.key == pygame.K_UP:
-    #             exit = True
-    #         elif event.key == pygame.K_SPACE:
-    #             #Go up
-    #             timer =0
-    #             up = True
-    #             #boost
-    #             action_chosen=1
-    #
-    #
-    #     if event.type == pygame.KEYUP:
-    #         if event.key == pygame.K_SPACE:
-    #             up = False
-    #             timer = 0
-    #             gravity_timer = 0
-    # if action ==1:
-    #      timer =0
-    #      up = True
-    # elif action == 2:
-    #     up = False
-    #     timer = 0
-    #     gravity_timer =0
-
+    global index
 
     if action ==0:
          y+=5
     elif action == 1:
         y-=5
 
-    x += x_change
-
-    #-----------------HUMAN PLAYER
-    # if up:
-    #     y += gravity - timer/2
-    # else:
-    #     y += gravity +gravity_timer/5
-
-    #gameDisplay.fill(white)
     score +=1
-    display_score(score)
-    #draw_walls(walls)
-    done = update_walls(score,x,y)
 
-    copter(x,y)
+    update_walls_without_drawing(score,x,y,index)
+    index +=1
+    if index ==55:
+        index =0
+    done = crashCheck(x,y)
+    #copter(x,y)
+    delta_top = 0
+    delta_bottom = 0
+    top_bound =0
+    bottom_bound =0
+    for wall in walls[0]:
+        if wall[0] > x-10 and wall[0] < x+10:
+            delta_top=wall[1]+170
+            top_bound =wall[1]+170
+            break
+    for wall in walls[1]:
+        if wall[0] > x-10 and wall[0] < x+10:
+            delta_bottom =wall[1]
+            bottom_bound =wall[1]
+            break
+    # if np.absolute(delta_top - delta_bottom)/2 < (bottom_bound - top_bound)/4:
+    #     score = 1
+    # else:
+    #     score = 0
 
-    #pygame.display.update()
-    #clock.tick(60)
-    timer += 1
-    gravity_timer +=1
-    # test = [[x],[y],walls[0],walls[1],[timer],[gravity_timer]]
-    # test2 = np.concatenate([np.array(lis) for lis in test])
-    upper_Boundaries = [wall[1]+170 for wall in walls[0]]
-    lower_Boundaries = [wall[1] for wall in walls[1]]
-    return_val =[x,y]
-    for df in upper_Boundaries:
-        return_val.append(df)
-    for dg in lower_Boundaries:
-        return_val.append(dg)
+    if y > 250 and y<350:
+        score = 1
+    else:
+        score = 0
 
-    return np.array(return_val), score, done
+    return np.array([x,y,delta_top,delta_bottom]), score, done
 
 def game_loop_testing(action):
 
@@ -291,38 +303,40 @@ def game_loop_testing(action):
     global up
     global exit
     global walls
+    global index
 
     if action ==0:
          y+=5
     elif action == 1:
         y-=5
-    x += x_change
     gameDisplay.fill(white)
     score +=1
     display_score(score)
-    done = update_walls(score,x,y)
+
+    update_walls(score,x,y, index)
+    index +=1
+    if index ==55:
+        index =0
+    done = crashCheck(x,y)
     copter(x,y)
     pygame.display.update()
     clock.tick(60)
     timer += 1
     gravity_timer +=1
 
-    upper_Boundaries = [wall[1]+170 for wall in walls[0]]
-    lower_Boundaries = [wall[1] for wall in walls[1]]
-    return_val =[x,y]
-    for df in upper_Boundaries:
-        return_val.append(df)
-    for dg in lower_Boundaries:
-        return_val.append(dg)
+    delta_top = 0
+    delta_bottom = 0
+    for wall in walls[0]:
+        if wall[0] > x-10 and wall[0] < x+10:
+            delta_top=wall[1]+170
+            break
+    for wall in walls[1]:
+        if wall[0] > x-10 and wall[0] < x+10:
+            delta_bottom =wall[1]
+            break
 
-    return np.array(return_val), score, done
-def crashCheck(copter_x,copter_y):
-    for wallGroup in walls:
-        index = 0
-        for wall in wallGroup:
-            if copter_x>=wall[0] and copter_x <= (wall[0]+wall[2]):
-                if copter_y >= wall[1] and copter_y <= (wall[1]+wall[3]):
-                    crash()
+    return np.array([x,y,delta_top,delta_bottom]), score, done
+
 def main():
     index = 0
     x =  (display_width * 0.2)
@@ -383,7 +397,8 @@ def main():
         index +=1
         if index ==55:
             index =0
-        crashCheck(x,y)
+        if crashCheck(x,y):
+             quit()
         print('X: ',x)
         copter(x,y)
 
