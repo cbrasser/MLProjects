@@ -284,7 +284,7 @@ def main_game_loop(action):
     #     score = 0
     middle = bottom_bound - (bottom_bound - top_bound)/2
     if (y > middle and action == 0) or (y<middle and action ==1):
-        score = 1
+        score = 2
     else:
         score = -1
 
