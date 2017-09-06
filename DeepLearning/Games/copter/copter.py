@@ -282,13 +282,14 @@ def main_game_loop(action):
     #     score = 1
     # else:
     #     score = 0
-
-    if y > 250 and y<350:
+    middle = bottom_bound - (bottom_bound - top_bound)/2
+    if (y > middle and action == 0) or (y<middle and action ==1):
         score = 1
     else:
-        score = 0
+        score = -1
 
-    return np.array([x,y,delta_top,delta_bottom]), score, done
+    #return np.array([x,y,delta_top,delta_bottom]), score, done
+    return np.array([delta_top,delta_bottom]), score, done
 
 def game_loop_testing(action):
 
@@ -335,7 +336,7 @@ def game_loop_testing(action):
             delta_bottom =wall[1]
             break
 
-    return np.array([x,y,delta_top,delta_bottom]), score, done
+    return np.array([delta_top,delta_bottom]), score, done
 
 def main():
     index = 0

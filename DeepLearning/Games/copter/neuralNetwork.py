@@ -11,7 +11,7 @@ import copter
 LR = 1e-3
 #copter.setUp()
 goal_steps = 500
-score_requirement = 60
+score_requirement = 10
 initial_games = 1000
 
 
@@ -123,7 +123,7 @@ model.load('myModel.model')
 '''
 scores = []
 choices = []
-for each_game in range(10):
+for each_game in range(100):
     score = 0
     game_memory =[]
     prev_obs = []
@@ -135,9 +135,10 @@ for each_game in range(10):
             action = random.randrange(0,2)
         else:
             action = np.argmax(model.predict(prev_obs.reshape(-1,len(prev_obs),1))[0])
+
         choices.append(action)
 
-        new_observation, reward, done = copter.game_loop_testing(action)
+        new_observation, reward, done = copter.main_game_loop(action)
         prev_obs = new_observation
         game_memory.append([new_observation, action])
         score += reward
