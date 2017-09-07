@@ -14,7 +14,7 @@ env = gym.make('CartPole-v1')
 env.reset()
 goal_steps = 500
 score_requirement = 50
-initial_games = 10000
+initial_games = 1000
 
 def some_random_games_first():
     for episode in range(500):
