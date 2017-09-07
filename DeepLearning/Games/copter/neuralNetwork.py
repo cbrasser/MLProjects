@@ -8,10 +8,10 @@ from collections import Counter
 import copter
 
 #Learning rate
-LR = 1e-3
+LR = 0.001
 #copter.setUp()
 goal_steps = 500
-score_requirement = 10
+score_requirement = 50
 initial_games = 1000
 
 
@@ -52,6 +52,7 @@ def initial_population():
 
                 # saving our training data
                 training_data.append([data[0], output])
+
         copter.reset()
         scores.append(score)
 
@@ -64,7 +65,7 @@ def initial_population():
     print(len(accepted_scores))
 
     print('TRAINGING DATA',training_data[0])
-    print('TRAINGING DATA',training_data[0][0])
+
 
     for asdf in range(0,100):
         print('TRAINING DATA', training_data[asdf])
@@ -77,7 +78,7 @@ def load_training_data():
 def neural_network_model(input_size, test=False):
     network = input_data(shape=[None, input_size,1], name = 'input')
 
-    network = fully_connected(network, 128, activation = 'relu')
+    network = fully_connected(network, 128, activation = 'softmax')
     #0.8 is keep rate rather than dropout rate ??
     network = dropout(network, 0.7)
 
@@ -93,19 +94,40 @@ def neural_network_model(input_size, test=False):
     network = dropout(network, 0.7)
 
     network = fully_connected(network, 2, activation='softmax')
-    network = regression(network, optimizer='adam', learning_rate=LR, loss='categorical_crossentropy', name ='targets')
+    network = regression(network, optimizer='adam', learning_rate=LR, name ='targets')
 
     model = tflearn.DNN(network, tensorboard_dir ='log')
 
     return model
+
+
+def train_model_myself_goddammit(training_data):
+
+    input_ = tflearn.input_data(shape=[None,2])
+    r1 = tflearn.fully_connected(input_,2)
+    #2-d fully connected layer for output
+    #r1 = tflearn.fully_connected(r1,2)
+    r1 = tflearn.regression(r1, optimizer='sgd', loss='mean_square',metric='R2', learning_rate=0.01)
+    #linear = tflearn.single_unit(input_)
+    #regression = tflearn.regression(linear, optimizer='sgd', loss='mean_square',
+                                    #metric='R2', learning_rate=0.01)
+    m = tflearn.DNN(r1)
+    X = np.array([i[0] for i in training_data]).reshape(-1,len(training_data[0][0]))
+    y = [i[1] for i in training_data]
+    print(len(y))
+    m.fit(X, y, n_epoch=5, show_metric=True, snapshot_epoch=False)
+    return m
+
+
 
 def train_model(training_data, model=False):
     # i contains [observations, output (action you took)]
     print(len(training_data[0][0]))
     X = np.array([i[0] for i in training_data]).reshape(-1,len(training_data[0][0]),1)
     print('Len x: ',len(X))
-    y = [i[1] for i in training_data]
-
+    y = [i[1]  for i in training_data]
+    for i in training_data:
+        print(i[1])
     if not model:
         model = neural_network_model(input_size=len(X[0]))
 
@@ -113,9 +135,9 @@ def train_model(training_data, model=False):
 
     return model
 
-training_data = initial_population()
+training_data = load_training_data()
 model = train_model(training_data)
-
+#model = train_model_myself_goddammit(training_data)
 
 model.save('myModel.model')
 '''
@@ -134,7 +156,7 @@ for each_game in range(100):
         if len(prev_obs) ==0:
             action = random.randrange(0,2)
         else:
-            action = np.argmax(model.predict(prev_obs.reshape(-1,len(prev_obs),1))[0])
+            action = np.argmax(model.predict(prev_obs.reshape(-1, len(prev_obs),1))[0])
 
         choices.append(action)
 
