@@ -22,7 +22,7 @@ clock = pygame.time.Clock()
 pygame.init()
 gameDisplay = pygame.display.set_mode((display_width,display_height))
 pygame.display.set_caption('Cars')
-level_img = pygame.image.load('level_test.png')
+level_img = pygame.image.load('level_test_2.png')
 car_img = pygame.image.load('car.png')
 
 
@@ -41,15 +41,22 @@ def car(x,y,angles, car_img_new):
     sensors = []
     for angle in angles:
         sensor = [0,0]
-        sensor[0]= x+22+ np.cos(angle)*60
-        sensor[1] = y+10 +np.sin(angle)*60
+        sensor[0]= x_center+ np.cos(angle)*60
+        sensor[1] = y_center +np.sin(angle)*60
         sensors.append(sensor)
 
     pygame.draw.rect(gameDisplay, red, [x_center, y_center,3,3])
     pygame.draw.rect(gameDisplay, red, car_img_new.get_rect().move(x,y),1)
-
+    pygame.draw.rect(gameDisplay, red, [x_center + np.cos(angle-np.pi/2)*half_diag, y_center,3,3])
     for sensor in sensors:
         pygame.draw.rect(gameDisplay, green, [sensor[0],sensor[1],2,2])
+
+
+
+
+
+
+
 
 def collision_points(x,y, angle):
     '''
@@ -136,7 +143,7 @@ def race():
 
         pygame.draw.rect(gameDisplay, green,(x,y,3,3))
         pygame.draw.rect(gameDisplay, red,(x,y,3,3))
-        collision(x,y,rt_angles[2])
+        collision_points(x,y,rt_angles[2])
         pygame.display.update()
 
 
