@@ -18,9 +18,13 @@ green = (0,255,0)
 red = (255,0,0)
 angles = [-0.785, -0.392,0,0.392,0.785]
 half_diag = np.sqrt(car_width*car_width + car_height*car_height)/2
+turning_intensity = 0.1
+rt_angles = angles
+speed = initial_speed
 #Originally 10, might be to fast for the pixel checks when crossing a road at close to 90°
 #Didn't check how many pixels the was is thick at min.
-max_speed = 7
+max_speed = 5
+score = 0
 
 
 
@@ -29,7 +33,7 @@ clock = pygame.time.Clock()
 pygame.init()
 gameDisplay = pygame.display.set_mode((display_width,display_height))
 pygame.display.set_caption('Cars')
-level_img = pygame.image.load('test_level_4.png')
+level_img = pygame.image.load('test_rewards.png')
 car_img = pygame.image.load('car_test.bmp')
 #circle_img = pygame.image.load('circle.png')
 
@@ -59,6 +63,16 @@ def car(x,y,angles, car_img_new):
         sensor = [0,0]
         sensor[0]= x_center+ np.cos(angle)*60
         sensor[1] = y_center +np.sin(angle)*60
+        sensors.append(sensor)
+    for angle in angles:
+        sensor = [0,0]
+        sensor[0]= x_center+ np.cos(angle)*30
+        sensor[1] = y_center +np.sin(angle)*30
+        sensors.append(sensor)
+    for angle in angles:
+        sensor = [0,0]
+        sensor[0]= x_center+ np.cos(angle)*45
+        sensor[1] = y_center +np.sin(angle)*45
         sensors.append(sensor)
     angle = angles[2]
     hitpoints=[]
@@ -100,7 +114,7 @@ def car(x,y,angles, car_img_new):
     for hp in hitpoints:
         pygame.draw.rect(gameDisplay, blue, [hp[0],hp[1],1,1])
 
-    #pygame.draw.rect(gameDisplay, red, car_img_new.get_rect().move(x,y),1)
+    pygame.draw.rect(gameDisplay, red, car_img_new.get_rect().move(x,y),1)
 
     for sensor in sensors:
         pygame.draw.rect(gameDisplay, green, [sensor[0],sensor[1],2,2])
@@ -109,13 +123,13 @@ def car(x,y,angles, car_img_new):
 
 
 
-
-
 def collision_check(hitpoints):
     '''
     check if the car drove into a wall by analysing the rgb color value at the 2 hitpoints in the front of the car
     the rear 2 hitpoints are currently not checked to increase performance
     '''
+    crash = False
+    reward = False
     tests= []
 
     for hp in hitpoints:
@@ -127,16 +141,18 @@ def collision_check(hitpoints):
         #print(tuple(level_img.get_at((int(hp[0]+3),int(hp[1])))))
 
     for t in tests:
-
+        print(t)
         if t[0] <= 5 and t[1]<=5 and t[2]<=5:
-            return True
-        return False
+            crash = True
+        if t[0] >= 200 and t[1]<=50 and t[2]<=50:
+            reward = True
+    return crash, reward
 
 #TODO Write function to translate coordinates from the sensor from vector to polar form with magniute and angle
 def read_sensors(sensors):
     '''
-    Read the pixel color values in rgb format at the 5 sensors in front of the car
-    Returns Color (currently or white/black as 0/1) and coordinates of point meassured
+    Read the pixel color values in rgb format at the 15 sensors in front of the car
+    Returns Color (currently white/black as 0/1) and coordinates of point meassured
 
     '''
     colors_read = []
@@ -165,6 +181,8 @@ def turn(curr_direction,dir_to_turn, turn_intensity):
     return curr_direction + turn_intensity*dir_to_turn
 
 def race():
+    reward_timer = 0
+    score = 0
     turning_left = False
     turning_right = False
     global car_img
@@ -224,8 +242,14 @@ def race():
         y = y + np.sin(rt_angles[2])*speed
         hp =[]
         hp =car(x,y,rt_angles, car_img_new)
-
-        if collision_check(hp):
+        crash, reward = collision_check(hp)
+        if reward_timer == 0:
+            if reward:
+                score +=1
+                reward_timer=5
+        else:
+            reward_timer -=1
+        if crash:
             exit = True
         # circle(int(x),int(y),rt_angles)
 
@@ -233,9 +257,77 @@ def race():
         #pygame.draw.rect(gameDisplay, red,(x,y,3,3))
 
         pygame.display.update()
-
-
         clock.tick(60)
+    print(score)
+
+
+def reset():
+    global reward_timer
+    global score
+    global x
+    global y
+    global car_img_new
+    global rt_angles
+    global angle
+    reward_timer = 0
+    score = 0
+    car_img_new = car_img
+    x = initial_car_pos[0]
+    y = initial_car_pos[1]
+    angle = initial_car_pos[2]
+    rt_angles = angles
+
+
+def race_one_step(action,x_,y_,an):
+
+    global reward_timer
+    global score
+    global car_img
+    global angles
+    global rt_angles
+    global speed
+    car_img_new = car_img
+    x = x_
+    y = y_
+    angle = an
+
+    finished = False
+
+    if action == [0,1,0]:
+        #Angle before this frame
+        tmp_angle = rt_angles[2]*180 / np.pi
+        #Angle to rotate
+        delta_angle = 180*turning_intensity/np.pi
+        #Rotate the original picture for the angle before the frame + the new part
+        car_img_new = pygame.transform.rotozoom(car_img,-(tmp_angle - delta_angle),1)
+        #Update the angles
+        rt_angles = [turn(angle,-1, turning_intensity) for angle in rt_angles]
+    elif action == [0,0,1]:
+        tmp_angle = rt_angles[2]*180 / np.pi
+        delta_angle = 180*turning_intensity/np.pi
+        car_img_new = pygame.transform.rotozoom(car_img,-(tmp_angle + delta_angle),1)
+        rt_angles = [turn(angle,1, turning_intensity) for angle in rt_angles]
+    if action == [1,0,0]:
+        speed = accelerate(speed)
+    gameDisplay.fill(white)
+    level()
+    x = x+ np.cos(rt_angles[2])*speed
+    y = y + np.sin(rt_angles[2])*speed
+    hp =[]
+    hp =car(x,y,rt_angles, car_img_new)
+    crash, reward = collision_check(hp)
+    if reward_timer == 0:
+        if reward:
+            score +=1
+            reward_timer=5
+    else:
+        reward_timer -=1
+    if crash:
+        exit = True
+
+    pygame.display.update()
+    clock.tick(60)
+
 if __name__ == "__main__":
 
     race()
