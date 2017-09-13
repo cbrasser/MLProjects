@@ -22,7 +22,7 @@ turning_intensity = 0.1
 rt_angles = angles
 speed = initial_speed
 #Originally 10, might be to fast for the pixel checks when crossing a road at close to 90°
-#Didn't check how many pixels the was is thick at min.
+#Didn't check how many pixels the wall is thick at min.
 max_speed = 5
 score = 0
 
@@ -319,7 +319,7 @@ def race_one_step(action,x_,y_,an):
     if reward_timer == 0:
         if reward:
             score +=1
-            reward_timer=5
+            reward_timer=8
     else:
         reward_timer -=1
     if crash:
