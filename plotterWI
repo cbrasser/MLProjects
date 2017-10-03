@@ -1,0 +1,236 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+df1 = pd.read_csv('Detailauswertungen.csv')
+df2 = pd.read_csv('ProfitsAndLoss.csv')
+df3 = pd.read_csv('totalSales.csv')
+df4 = pd.read_csv('ProfitsAndLossTotal.csv')
+
+array = np.array(df1)
+array2 = np.array(df2)
+array3 = np.array(df3)
+array4 = np.array(df4)
+
+def plot_profit_and_loss_all():
+    print(array4[0])
+    '''
+L
+M
+N
+O
+P
+Q
+S
+V
+W
+'''
+    plt.plot(array4[0], label="Team L")
+    plt.plot(array4[1], label="Team M")
+    plt.plot(array4[2], label="Team N")
+    plt.plot(array4[3], label="Team O")
+    plt.plot(array4[4], label="Team P")
+    plt.plot(array4[5], label="Team Q")
+    plt.plot(array4[6], label="Team S")
+    plt.plot(array4[7], label="Team V")
+    plt.plot(array4[8], label="Team W")
+    x = [0,1,2,3]
+    plt.legend()
+    plt.xlabel('')
+    plt.ylabel('euro')
+    my_xticks = ['Delivery cost','Storage cost','Sales after R3 / 1000','Valuation / 1000']
+    plt.xticks(x, my_xticks)
+
+    plt.title('Sales and loss for all teams')
+
+    plt.show()
+
+def plot_total_sales_all():
+    rounds=[]
+
+    for i in range(1,4):
+        milk  = 0
+        cheese =0
+        yogurt=0
+        icecream=0
+        butter=0
+        cream=0
+
+        for entry in array3:
+            if entry[0]==i:
+                if entry[2]=='Milk':
+                    milk+=entry[5]
+                if entry[2]=='Yoghurt':
+                    yogurt+=entry[5]
+                if entry[2]=='Ice Cream':
+                    icecream+=entry[5]
+                if entry[2]=='Butter':
+                    butter+=entry[5]
+                if entry[2]=='Cream':
+                    cream+=entry[5]
+                if entry[2]=='Cheese':
+                    cheese+=entry[5]
+
+        rounds.append([milk,cheese, yogurt,icecream,butter, cream])
+
+    print(rounds)
+    plt.bar([1,4,7,10,13,16],rounds[0],label='Round 1')
+    plt.bar([2,5,8,11,14,17],rounds[1],label='Round 2')
+    plt.bar([3,6,9,12,15,18],rounds[2],label='Round 3')
+    plt.legend()
+    x = [2,5,8,11,14,17]
+    plt.xlabel('products')
+    plt.ylabel('sales quantity')
+    my_xticks = ['Milk','Yoghurt','Ice Cream','Butter','Cream','Cheese']
+    plt.xticks(x, my_xticks)
+
+    plt.title('Sales over all rounds')
+
+    plt.show()
+
+def plot_profit_and_loss():
+    print(array2[0])
+    plt.plot([1,2,3],[array2[0][3],array2[1][3],array2[2][3]],label='total')
+    plt.ylabel('sales per round')
+    plt.xlabel('Round')
+    plt.show()
+
+def stackplot():
+    rounds=[]
+
+    for i in range(1,4):
+        milk  = [0,0,0]
+        cheese =[0,0,0]
+        yogurt=[0,0,0]
+        icecream=[0,0,0]
+        butter=[0,0,0]
+        cream=[0,0,0]
+
+        for entry in array:
+            if entry[4]=='Milk':
+                milk[entry[0]-1]+=entry[8]
+            if entry[4]=='Yoghurt':
+                yogurt[entry[0]-1]+=entry[8]
+            if entry[4]=='Ice Cream':
+                icecream[entry[0]-1]+=entry[8]
+            if entry[4]=='Butter':
+                butter[entry[0]-1]+=entry[8]
+            if entry[4]=='Cream':
+                cream[entry[0]-1]+=entry[8]
+            if entry[4]=='Cheese':
+                cheese[entry[0]-1]+=entry[8]
+
+        rounds=[milk,cheese, yogurt,icecream,butter, cream]
+    print (rounds)
+    plt.plot([],[],color='m', label='milk', linewidth=5)
+    plt.plot([],[],color='c', label='cheese', linewidth=5)
+    plt.plot([],[],color='r', label='yogurt', linewidth=5)
+    plt.plot([],[],color='k', label='icecream', linewidth=5)
+    plt.plot([],[],color='b', label='butter', linewidth=5)
+    plt.plot([],[],color='g', label='cream', linewidth=5)
+
+    plt.stackplot([1,2,3],rounds[0],rounds[1],rounds[2],rounds[3],rounds[4],rounds[5], colors=['m','c','r','k','b','g'])
+    plt.xlabel('Round')
+    x = [1,2,3]
+    my_xticks = [1,2,3]
+    plt.xticks(x, my_xticks)
+    plt.ylabel('Sold goods out of total')
+    plt.legend()
+    plt.show()
+
+def stackplot_all():
+    rounds=[]
+
+    for i in range(1,4):
+        milk  = [0,0,0]
+        cheese =[0,0,0]
+        yogurt=[0,0,0]
+        icecream=[0,0,0]
+        butter=[0,0,0]
+        cream=[0,0,0]
+
+        for entry in array3:
+            if entry[2]=='Milk':
+                milk[entry[0]-1]+=entry[5]
+            if entry[2]=='Yoghurt':
+                yogurt[entry[0]-1]+=entry[5]
+            if entry[2]=='Ice Cream':
+                icecream[entry[0]-1]+=entry[5]
+            if entry[2]=='Butter':
+                butter[entry[0]-1]+=entry[5]
+            if entry[2]=='Cream':
+                cream[entry[0]-1]+=entry[5]
+            if entry[2]=='Cheese':
+                cheese[entry[0]-1]+=entry[5]
+
+        rounds=[milk,cheese, yogurt,icecream,butter, cream]
+    print (rounds)
+    plt.plot([],[],color='m', label='milk', linewidth=5)
+    plt.plot([],[],color='c', label='cheese', linewidth=5)
+    plt.plot([],[],color='r', label='yogurt', linewidth=5)
+    plt.plot([],[],color='k', label='icecream', linewidth=5)
+    plt.plot([],[],color='b', label='butter', linewidth=5)
+    plt.plot([],[],color='g', label='cream', linewidth=5)
+
+    plt.stackplot([1,2,3],rounds[0],rounds[1],rounds[2],rounds[3],rounds[4],rounds[5], colors=['m','c','r','k','b','g'])
+    plt.xlabel('Round')
+    x = [1,2,3]
+    my_xticks = [1,2,3]
+    plt.title('Sales of all teams')
+    plt.xticks(x, my_xticks)
+    plt.ylabel('Sold goods out of total')
+    plt.legend()
+    plt.show()
+
+def plot_total_sales():
+    rounds=[]
+
+    for i in range(1,4):
+        milk  = 0
+        cheese =0
+        yogurt=0
+        icecream=0
+        butter=0
+        cream=0
+
+        for entry in array:
+            if entry[0]==i:
+                if entry[4]=='Milk':
+                    milk+=entry[8]
+                if entry[4]=='Yoghurt':
+                    yogurt+=entry[8]
+                if entry[4]=='Ice Cream':
+                    icecream+=entry[8]
+                if entry[4]=='Butter':
+                    butter+=entry[8]
+                if entry[4]=='Cream':
+                    cream+=entry[8]
+                if entry[4]=='Cheese':
+                    cheese+=entry[8]
+
+        rounds.append([milk,cheese, yogurt,icecream,butter, cream])
+
+    print(rounds)
+    plt.bar([1,4,7,10,13,16],rounds[0],label='Round 1')
+    plt.bar([2,5,8,11,14,17],rounds[1],label='Round 2')
+    plt.bar([3,6,9,12,15,18],rounds[2],label='Round 3')
+    x = [2,5,8,11,14,17]
+    plt.legend()
+    my_xticks = ['Milk','Yoghurt','Ice Cream','Butter','Cream','Cheese']
+    plt.xticks(x, my_xticks)
+
+    plt.xlabel('products')
+    plt.ylabel('sales quantity')
+
+    plt.title('Sales over all rounds Team Q')
+
+    plt.show()
+
+
+
+stackplot_all()
+# stackplot()
+# plot_total_sales()
+# plot_profit_and_loss()
+# plot_total_sales_all()
+# plot_profit_and_loss_all()
