@@ -13,18 +13,15 @@ blue = (0,0,255)
 green = (0,255,0)
 
 #----------------------Sizes-----------------------
-display_width = 800
-display_height = 600
-free_space = display_height-340
-copter_width = 73
-wall_width= display_width/50
+display_width = 1600
+display_height = 1200
 x =  (display_width * 0.2)
 y = (display_height * 0.5)
 
 #--------------------Game variables-------------------
 
 highscore = 0
-totalPopulation = 5
+totalPopulation = 10
 bestCopter = None
 wall = copter.Wall()
 allCopters = []
@@ -102,7 +99,6 @@ def draw():
 		bestCopter.draw(gameDisplay)
 	else:
 		for i in range(0,len(activeCopters)):
-			print("drawing copter: ",i)
 			activeCopters[i].draw(gameDisplay)
 		if len(activeCopters)==0:
 			print("next generation, highscore: ",highscore)
@@ -130,7 +126,6 @@ def main():
 	exit = False
     
 	while not exit:
-		print "next frame"
 		gameDisplay.fill(white)
 		exit = check_for_termination()
 		draw()

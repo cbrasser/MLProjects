@@ -2,6 +2,7 @@ import random
 import numpy as np
 import neuralNetwork as nn
 import pygame
+import math
 
 #--------------------Colors-----------------------
 black = (0,0,0)
@@ -11,9 +12,10 @@ green = (0,255,0)
 
 #---------------------sizes--------------------
 
-display_width = 800
-display_height = 600
+display_width = 1600
+display_height = 1200
 wall_width= display_width/50
+wall_height=display_height/6
 x =  (display_width * 0.2)
 y = (display_height * 0.5)
 
@@ -94,21 +96,25 @@ class Wall_element:
 		self.color = color
 
 	def draw(self,gameDisplay, xmod =0, ymod =0, wmod =0, hmod =0):
-		pygame.draw.rect(gameDisplay, self.color, [self.x, self.y, self.width, self.height])
-		pygame.draw.rect(gameDisplay, black, [self.x, self.y, self.width, self.height],1)
+		if self.color==green:
+			#pygame.draw.rect(gameDisplay, black, [self.x, 0, self.width, ],1)
+			pygame.draw.rect(gameDisplay, self.color, [self.x, 0, self.width, self.y+self.height])
+		else:
+			#	pygame.draw.rect(gameDisplay, black, [self.x, self.y, self.width, self.height],1)
+			pygame.draw.rect(gameDisplay, self.color, [self.x, self.y, self.width, display_height-self.y])
     
 class Wall():
 	def __init__(self):
 		self.prev_height_top = 0
 		self.prev_x = -5
-		self.prev_height_bottom = display_height-170
+		self.prev_height_bottom = display_height-wall_height
 		self.upper_walls = []
 		self.lower_walls = []
 		self.direction = [0,0]
 
 		for i in range(0,55):
-			self.upper_walls.append(Wall_element(-wall_width+i*wall_width,0,wall_width,170, green))
-			self.lower_walls.append(Wall_element(-wall_width+i*wall_width,self.prev_height_bottom,wall_width,170,blue))
+			self.upper_walls.append(Wall_element(-wall_width+i*wall_width,0,wall_width,wall_height, green))
+			self.lower_walls.append(Wall_element(-wall_width+i*wall_width,self.prev_height_bottom,wall_width,wall_height,blue))
 
 	def update_wallgroup(self,gameDisplay,walls, draw):
 		global direction
@@ -118,14 +124,12 @@ class Wall():
 			else:
 				if self.direction[0]==1:
 					walls[index].y= walls[index].y - (self.direction[1]+1)*2
-					next_direction = random.randrange(0,10)
-					if next_direction <= self.direction[1] or (walls[index].color==green and walls[index].y<-150):
+					if (walls[index].color==green and walls[index].y<-150):
 						self.direction = [0,0]
 					self.direction[1]+=1
 				else:
 					walls[index].y= walls[index].y + (self.direction[1]+1)*2
-					next_direction = random.randrange(0,10)
-					if next_direction <= self.direction[1] or (walls[index].color==blue and walls[index].y>display_height-20):
+					if (walls[index].color==blue and walls[index].y>display_height-20):
 						self.direction = [1,0]
 					self.direction[1]+=1
 			if draw:
@@ -138,6 +142,9 @@ class Wall():
 
 	def update(self,gameDisplay,drawing=True):
 		#Only update the lower walls if the upper walls did not lead to a crash
+		next_direction = random.randrange(0,10)
+		if next_direction <= self.direction[1]:
+			self.direction = [math.floor((self.direction[0]+1)/2),0]
 		self.update_wallgroup(gameDisplay, self.upper_walls, drawing)
 		self.update_wallgroup(gameDisplay,self.lower_walls, drawing)		
 
