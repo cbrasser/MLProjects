@@ -6,6 +6,8 @@ from tflearn.layers.estimator import regression
 from statistics import mean, median
 from collections import Counter
 import copter
+import math
+import json
 
 #Learning rate
 LR = 0.001
@@ -14,158 +16,122 @@ goal_steps = 500
 score_requirement = 50
 initial_games = 1000
 
+class ActivationFunction:
+    def __init__(self, func, dfunc):
+        self.func = func
+        self.dfunc = dfunc
+
+def sigmoid1(x):
+    if x< 0:
+        return 1- 1/(1 +math.exp(x))
+    else:
+        return 1/(1 +math.exp(-x))
 
 
-def initial_population():
-    training_data = [] # initial data will be random
-    scores = []
-    accepted_scores = []
+sigmoid = ActivationFunction(sigmoid1, lambda y : y*(1-y))
 
-    for _ in range(initial_games):
-        score = 0
+class NeuralNetwork:
+    def __init__(self, a, b,c):
+        if isinstance(a, NeuralNetwork):
+            self.input_nodes = a.input_nodes
+            self.hidden_nodes = a.hidden_nodes
+            self.output_nodes = a.output_nodes
 
-        game_memory=[]
-        prev_observation = []
-        for _ in range(goal_steps):
+            self.weights_ih = np.copy(a.weights_ih)
+            self.weights_ho = np.copy(a.weights_ho)
 
-            #Only generates 0s and 1s
-            action = random.randrange(0,2)
-            observation, reward, done = copter.main_game_loop(action)
+            self.bias_h = np.copy(a.bias_h)
+            self.bias_o = np.copy(a.bias_o)
 
-            game_memory.append([observation,action])
-
-            score += reward
-            if done:
-                break
-        if score >= score_requirement:
-            accepted_scores.append(score)
-            for data in game_memory:
-                #Output in this form because of one-hot, could be useful when there are more input possibilities
-                #than just 0 or 1!
-                output =[0,0]
-                if data[1] == 1:
-
-                    output = [0,1]
-                elif data[1] == 0:
-
-                    output = [1,0]
-
-                # saving our training data
-                training_data.append([data[0], output])
-
-        copter.reset()
-        scores.append(score)
-
-    training_data_save = np.array(training_data)
-    np.save('saved.npy', training_data_save)
-
-    print('Average accepted score: ',mean(accepted_scores))
-    print('Median accepted score: ', median(accepted_scores))
-
-    print(len(accepted_scores))
-
-    print('TRAINGING DATA',training_data[0])
-
-
-    for asdf in range(0,100):
-        print('TRAINING DATA', training_data[asdf])
-
-    return training_data
-
-def load_training_data():
-    return np.load('saved.npy')
-
-def neural_network_model(input_size, test=False):
-    network = input_data(shape=[None, input_size,1], name = 'input')
-
-    network = fully_connected(network, 128, activation = 'softmax')
-    #0.8 is keep rate rather than dropout rate ??
-    network = dropout(network, 0.7)
-
-    network = fully_connected(network, 256, activation = 'relu')
-    network = dropout(network, 0.7)
-
-    network = fully_connected(network, 512, activation = 'relu')
-
-    network = fully_connected(network, 256, activation = 'relu')
-    network = dropout(network, 0.7)
-
-    network = fully_connected(network, 128, activation = 'relu')
-    network = dropout(network, 0.7)
-
-    network = fully_connected(network, 2, activation='softmax')
-    network = regression(network, optimizer='adam', learning_rate=LR, name ='targets')
-
-    model = tflearn.DNN(network, tensorboard_dir ='log')
-
-    return model
-
-
-def train_model_myself_goddammit(training_data):
-
-    input_ = tflearn.input_data(shape=[None,2])
-    r1 = tflearn.fully_connected(input_,2)
-    #2-d fully connected layer for output
-    #r1 = tflearn.fully_connected(r1,2)
-    r1 = tflearn.regression(r1, optimizer='sgd', loss='mean_square',metric='R2', learning_rate=0.01)
-    #linear = tflearn.single_unit(input_)
-    #regression = tflearn.regression(linear, optimizer='sgd', loss='mean_square',
-                                    #metric='R2', learning_rate=0.01)
-    m = tflearn.DNN(r1)
-    X = np.array([i[0] for i in training_data]).reshape(-1,len(training_data[0][0]))
-    y = [i[1] for i in training_data]
-    print(len(y))
-    m.fit(X, y, n_epoch=5, show_metric=True, snapshot_epoch=False)
-    return m
-
-
-
-def train_model(training_data, model=False):
-    # i contains [observations, output (action you took)]
-    print(len(training_data[0][0]))
-    X = np.array([i[0] for i in training_data]).reshape(-1,len(training_data[0][0]),1)
-    print('Len x: ',len(X))
-    y = [i[1]  for i in training_data]
-    for i in training_data:
-        print(i[1])
-    if not model:
-        model = neural_network_model(input_size=len(X[0]))
-
-    model.fit({'input': X}, {'targets': y}, n_epoch=3, snapshot_step=500, show_metric=True, run_id='openai_learning')
-
-    return model
-
-training_data = load_training_data()
-model = train_model(training_data)
-#model = train_model_myself_goddammit(training_data)
-
-model.save('myModel.model')
-'''
-model.load('myModel.model')
-'''
-scores = []
-choices = []
-for each_game in range(100):
-    score = 0
-    game_memory =[]
-    prev_obs = []
-    copter.reset()
-    for _ in range((1000)):
-
-
-        if len(prev_obs) ==0:
-            action = random.randrange(0,2)
         else:
-            action = np.argmax(model.predict(prev_obs.reshape(-1, len(prev_obs),1))[0])
+            self.input_nodes = a
+            self.hidden_nodes = b
+            self.output_nodes = c
 
-        choices.append(action)
+            self.weights_ih = np.random.random((self.hidden_nodes, self.input_nodes))*2 -1
+            self.weights_ho = np.random.random((self.output_nodes, self.hidden_nodes)) *2 -1
 
-        new_observation, reward, done = copter.main_game_loop(action)
-        prev_obs = new_observation
-        game_memory.append([new_observation, action])
-        score += reward
-        if done:
-            break
-    scores.append(score)
-print(choices)
-print('Average score: ',sum(scores)/len(scores))
+            self.bias_h = np.random.random((self.hidden_nodes, 1))
+            self.bias_o = np.random.random((self.output_nodes, 1))
+
+        self.set_learning_rate()
+        self.set_activation_function()
+
+    def predict(self, input_array):
+        f = np.vectorize(self.activation_function.func)
+        inputs = np.transpose(np.mat(input_array))
+        hidden = np.dot(self.weights_ih,inputs)
+        hidden +=self.bias_h
+        hidden = f(hidden)
+        output = self.weights_ho * hidden
+        output +=self.bias_o
+        output = f(output)
+        return np.array(output)
+
+    def set_learning_rate(self, learning_rate = 0.1):
+        self.learning_rate = learning_rate
+
+    def set_activation_function(self, func = sigmoid):
+        self.activation_function = func
+
+    def train(self, input_array, target_array):
+        f = np.vectorize(self.activation_function.func)
+        df = np.vectorize(self.activation_function.dfunc)
+        inputs = np.mat(input_array)
+        hidden = self.weights_ih * inputs
+        hidden.append(self.bias_h)
+        hidden = f(hidden)
+
+        outputs = self.weights_ho * hidden
+        outputs.append(self.bias_o)
+        outputs = f(outputs)
+
+        targets = np.mat(target_array)
+        output_errors = targets - output
+        gradients = df(outputs)
+        gradients = gradients*output_errors
+        gradients = gradients * self.learning_rate
+
+        hidden_T = np.transpose(hidden)
+        weight_ho_deltas = gradients * hidden_T
+
+        self.weights_ho += weight_ho_deltas
+        self.bias_o += gradients
+
+        who_t = np.transpose(self.weights_ho)
+        hidden_errors = who_t * output_errors
+
+        hidden_gradient = df(hidden)
+        hidden_gradient *=hidden_errors
+        hidden_gradient *= self.learning_rate
+
+        inputs_T = np.transpose(inputs)
+        weight_ih_deltas = hidden_gradient * inputs_T
+
+        self.weights_ih += weight_ih_deltas
+        self.bias_h +=hidden_gradient
+
+    def serialize(self):
+        return JSON.stringify(self)
+
+    def deserialize(data):
+        data = JSON.parse(data)
+
+        nn = NeuralNetwork(data.input_nodes, data.hidden_nodes, data.output_nodes)
+        nn.weights_ih = JSON.parse(data.weights_ih);
+        nn.weights_ho = JSON.parse(data.weights_ho);
+        nn.bias_h = JSON.parse(data.bias_h);
+        nn.bias_o = JSON.parse(data.bias_o);
+        nn.learning_rate = data.learning_rate;
+        return nn;
+
+    def copy(self):
+        return NeuralNetwork(self, self.hidden_nodes, self.output_nodes)
+
+    def mutate(self, func):
+        f = np.vectorize(func)
+        self.weights_ih = f(self.weights_ih)
+        self.weights_ho = f(self.weights_ho)
+        self.bias_h = f(self.bias_h)
+        self.bias_o = f(self.bias_o)
+

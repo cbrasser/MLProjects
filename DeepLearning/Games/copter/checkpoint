@@ -1,2 +1,2 @@
-model_checkpoint_path: "C:\\Users\\Claudio\\Desktop\\Programming\\ML\\MLProjects\\DeepLearning\\Games\\copter\\myModel.model"
-all_model_checkpoint_paths: "C:\\Users\\Claudio\\Desktop\\Programming\\ML\\MLProjects\\DeepLearning\\Games\\copter\\myModel.model"
+model_checkpoint_path: "/home/clados/Programming/MLProjects/DeepLearning/Games/copter/myModel.model"
+all_model_checkpoint_paths: "/home/clados/Programming/MLProjects/DeepLearning/Games/copter/myModel.model"
