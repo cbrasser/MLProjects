@@ -189,9 +189,6 @@ def display_score(score, gameDisplay):
     text = font.render("Score: "+str(score), True, black)
     gameDisplay.blit(text,(20,200))
 
-def random_action2():
-    return random.randrange(0,2)
-
 
 
 

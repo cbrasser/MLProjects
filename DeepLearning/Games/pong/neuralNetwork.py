@@ -1,10 +1,17 @@
 import random
 import numpy as np
+import tflearn
+from tflearn.layers.core import input_data, dropout, fully_connected
+from tflearn.layers.estimator import regression
+from statistics import mean, median
+from collections import Counter
 import math
 import json
+import pickle
 
 #Learning rate
-LR = 0.01
+LR = 0.0001
+#copter.setUp()
 goal_steps = 500
 score_requirement = 50
 initial_games = 1000
@@ -14,14 +21,14 @@ class ActivationFunction:
         self.func = func
         self.dfunc = dfunc
 
-def sigmoid_impl(x):
+def sigmoid1(x):
     if x< 0:
         return 1- 1/(1 +math.exp(x))
     else:
         return 1/(1 +math.exp(-x))
 
 
-sigmoid = ActivationFunction(sigmoid_impl, lambda y : y*(1-y))
+sigmoid = ActivationFunction(sigmoid1, lambda y : y*(1-y))
 
 class NeuralNetwork:
     def __init__(self, a, b,c):
@@ -127,3 +134,4 @@ class NeuralNetwork:
         self.weights_ho = f(self.weights_ho)
         self.bias_h = f(self.bias_h)
         self.bias_o = f(self.bias_o)
+
