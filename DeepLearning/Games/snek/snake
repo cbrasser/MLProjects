@@ -1,0 +1,17 @@
+#!/bin/sh
+
+
+CELL_SIZE=30
+GRID_SIZE_X=30
+GRID_SIZE_Y=40
+
+#Display dimensions
+display_height=$GRID_SIZE_X*$CELL_SIZE
+display_width=$GRID_SIZE_Y*$CELL_SIZE
+
+#Snake start variables
+START_Y=12*$CELL_SIZE
+START_X=12*$CELL_SIZE
+INITIAL_SIZE=20
+
+python snake_game.py $CELL_SIZE $GRID_SIZE_X $GRID_SIZE_Y $display_height $display_width
